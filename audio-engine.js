@@ -176,11 +176,11 @@ const AudioEngine = (() => {
 
   /**
    * Unlock audio on iOS — MUST be called synchronously during a user gesture (tap/click).
-   * Creates the AudioContext, resumes it, and plays a short beep to verify audio works.
+   * Uses an <audio> element trick to force iOS to use the MEDIA volume channel
+   * (ignores silent/mute switch) instead of the ringer channel.
    */
   function unlockAudio() {
     if (audioCtx) {
-      // Already created, just ensure it's running
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
@@ -188,6 +188,16 @@ const AudioEngine = (() => {
     }
 
     try {
+      // Step 1: Play an <audio> element to force iOS into "media playback" mode.
+      // This makes Web Audio use the MEDIA volume (ignores mute switch).
+      // Tiny silent WAV as data URI (44 bytes)
+      const silentAudio = new Audio(
+        'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='
+      );
+      silentAudio.setAttribute('playsinline', '');
+      silentAudio.play().catch(() => {});
+
+      // Step 2: Create the Web Audio context
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       console.log('[AudioEngine] AudioContext created, state:', audioCtx.state);
 
@@ -199,21 +209,20 @@ const AudioEngine = (() => {
         });
       }
 
-      // Play an audible test beep to fully unlock iOS audio
+      // Step 3: Play a short beep to confirm audio is working
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.value = 440; // A4 note
-      gain.gain.value = 0.3;
-      // Quick fade out
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+      osc.frequency.value = 440;
+      gain.gain.value = 0.2;
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
       osc.start(audioCtx.currentTime);
-      osc.stop(audioCtx.currentTime + 0.3);
+      osc.stop(audioCtx.currentTime + 0.2);
 
-      console.log('[AudioEngine] Audio unlocked with test beep, state:', audioCtx.state);
+      console.log('[AudioEngine] Audio unlocked (media channel), state:', audioCtx.state);
     } catch (e) {
       console.error('[AudioEngine] Failed to unlock audio:', e);
     }
