@@ -1,0 +1,819 @@
+/* ============================================
+   ZombieWalk — Style System
+   Horror survival aesthetic with dark theme
+   ============================================ */
+
+/* === Reset & Base === */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Color palette — horror survival */
+  --bg-void: #050505;
+  --bg-dark: #0a0a0a;
+  --bg-surface: #111113;
+  --bg-elevated: #1a1a1e;
+
+  --blood-red: #8b0000;
+  --blood-bright: #cc1100;
+  --blood-glow: #ff2200;
+
+  --toxic-green: #00cc44;
+  --toxic-dim: #007a29;
+
+  --bone-white: #e8e0d4;
+  --fog-grey: #2a2a2e;
+  --ash-grey: #555;
+
+  --perk-blue: #2299ff;
+  --perk-gold: #ffc107;
+  --perk-purple: #aa44ff;
+
+  --danger-orange: #ff6600;
+
+  /* Typography */
+  --font-display: 'Creepster', cursive;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Spacing */
+  --safe-top: env(safe-area-inset-top, 20px);
+  --safe-bottom: env(safe-area-inset-bottom, 20px);
+
+  /* Z-index layers */
+  --z-map: 1;
+  --z-fog: 10;
+  --z-hud: 20;
+  --z-overlay: 30;
+  --z-screen: 40;
+  --z-modal: 50;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-void);
+  color: var(--bone-white);
+  font-family: var(--font-body);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* === Screen Management === */
+.screen {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: none;
+  z-index: var(--z-screen);
+}
+
+.screen.active {
+  display: flex;
+}
+
+/* ============================================
+   SPLASH SCREEN
+   ============================================ */
+#splash-screen {
+  background: var(--bg-void);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.splash-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 40px 24px;
+  z-index: 2;
+}
+
+/* Animated fog background */
+.splash-fog {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(139, 0, 0, 0.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(0, 204, 68, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 50%, rgba(30, 30, 30, 0.6) 0%, transparent 80%);
+  animation: fogDrift 15s ease-in-out infinite alternate;
+}
+
+@keyframes fogDrift {
+  0% { transform: scale(1) translate(0, 0); opacity: 0.6; }
+  50% { transform: scale(1.1) translate(-2%, 3%); opacity: 0.8; }
+  100% { transform: scale(1) translate(2%, -2%); opacity: 0.6; }
+}
+
+.game-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+
+.title-zombie {
+  font-family: var(--font-display);
+  font-size: clamp(56px, 15vw, 96px);
+  color: var(--blood-bright);
+  text-shadow:
+    0 0 20px rgba(204, 17, 0, 0.6),
+    0 0 60px rgba(204, 17, 0, 0.3),
+    0 4px 8px rgba(0, 0, 0, 0.8);
+  letter-spacing: 4px;
+  animation: titlePulse 3s ease-in-out infinite;
+}
+
+.title-walk {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 10vw, 64px);
+  color: var(--bone-white);
+  text-shadow:
+    0 0 10px rgba(232, 224, 212, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.8);
+  letter-spacing: 12px;
+  margin-top: -8px;
+}
+
+@keyframes titlePulse {
+  0%, 100% { text-shadow: 0 0 20px rgba(204, 17, 0, 0.6), 0 0 60px rgba(204, 17, 0, 0.3); }
+  50% { text-shadow: 0 0 30px rgba(204, 17, 0, 0.8), 0 0 80px rgba(204, 17, 0, 0.5); }
+}
+
+.tagline {
+  font-size: 14px;
+  color: var(--ash-grey);
+  font-weight: 300;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.pulse-ring {
+  width: 120px;
+  height: 120px;
+  border: 2px solid rgba(139, 0, 0, 0.4);
+  border-radius: 50%;
+  animation: pulseExpand 2.5s ease-out infinite;
+}
+
+@keyframes pulseExpand {
+  0% { transform: scale(0.5); opacity: 1; border-color: rgba(204, 17, 0, 0.6); }
+  100% { transform: scale(2); opacity: 0; border-color: rgba(204, 17, 0, 0); }
+}
+
+/* Buttons */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 40px;
+  background: linear-gradient(135deg, var(--blood-red), #6b0000);
+  color: var(--bone-white);
+  border: 1px solid rgba(204, 17, 0, 0.3);
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow:
+    0 4px 20px rgba(139, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.btn-primary:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 10px rgba(139, 0, 0, 0.6);
+}
+
+.btn-secondary {
+  padding: 12px 32px;
+  background: transparent;
+  color: var(--ash-grey);
+  border: 1px solid var(--fog-grey);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:active {
+  background: var(--bg-elevated);
+  color: var(--bone-white);
+}
+
+.btn-icon {
+  font-size: 20px;
+}
+
+.splash-hint {
+  font-size: 12px;
+  color: var(--ash-grey);
+  opacity: 0.6;
+}
+
+.splash-stats {
+  display: flex;
+  gap: 32px;
+  margin-top: 16px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--ash-grey);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--bone-white);
+}
+
+/* ============================================
+   GAME SCREEN
+   ============================================ */
+#game-screen {
+  flex-direction: column;
+}
+
+/* Map */
+#map-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-map);
+  background: var(--bg-void);
+}
+
+/* Hide Leaflet attribution for cleaner game look */
+.leaflet-control-attribution {
+  display: none !important;
+}
+
+.leaflet-control-zoom {
+  display: none !important;
+}
+
+/* Fog of war canvas */
+#fog-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-fog);
+  pointer-events: none;
+}
+
+/* === HUD === */
+#hud {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: var(--z-hud);
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: var(--safe-top) 12px var(--safe-bottom);
+}
+
+#hud > * {
+  pointer-events: auto;
+}
+
+/* Top HUD */
+.hud-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px;
+}
+
+.hud-health {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(139, 0, 0, 0.2);
+}
+
+.health-icon {
+  font-size: 16px;
+}
+
+.health-bar-outer {
+  width: 100px;
+  height: 8px;
+  background: rgba(139, 0, 0, 0.3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.health-bar-inner {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--blood-red), var(--blood-bright));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 8px rgba(204, 17, 0, 0.4);
+}
+
+.health-bar-inner.low {
+  background: linear-gradient(90deg, #ff0000, #ff4400);
+  animation: healthPulse 0.8s ease-in-out infinite;
+}
+
+@keyframes healthPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 0, 0, 0.4); }
+  50% { box-shadow: 0 0 16px rgba(255, 0, 0, 0.8); }
+}
+
+.health-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--bone-white);
+  min-width: 28px;
+  text-align: right;
+}
+
+.hud-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(232, 224, 212, 0.08);
+}
+
+.score-label {
+  font-size: 9px;
+  color: var(--ash-grey);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.score-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--perk-gold);
+  text-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+}
+
+/* Danger indicator */
+.hud-danger {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.danger-pulse {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  border: 2px solid rgba(255, 34, 0, 0.3);
+  border-radius: 50%;
+  animation: dangerPulse 1s ease-out infinite;
+}
+
+@keyframes dangerPulse {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+
+.danger-text {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--blood-glow);
+  text-shadow: 0 0 10px rgba(255, 34, 0, 0.6);
+  animation: dangerBlink 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes dangerBlink {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* Compass */
+.hud-compass {
+  position: absolute;
+  top: 80px;
+  right: 16px;
+  pointer-events: none;
+}
+
+.compass-ring {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(139, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.compass-arrow {
+  width: 3px;
+  height: 22px;
+  background: linear-gradient(to top, transparent, var(--blood-bright));
+  border-radius: 2px;
+  transform-origin: bottom center;
+  transform: rotate(0deg);
+  transition: transform 0.3s ease;
+  position: absolute;
+  top: 10px;
+  box-shadow: 0 0 6px rgba(204, 17, 0, 0.5);
+}
+
+.compass-label {
+  position: absolute;
+  bottom: -16px;
+  font-size: 8px;
+  color: var(--ash-grey);
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* Bottom HUD */
+.hud-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hud-inventory {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.inv-slot {
+  width: 52px;
+  height: 52px;
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(232, 224, 212, 0.1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.inv-slot:active {
+  transform: scale(0.9);
+  border-color: var(--perk-gold);
+}
+
+.inv-slot.has-item {
+  border-color: rgba(0, 204, 68, 0.3);
+  box-shadow: 0 0 8px rgba(0, 204, 68, 0.15);
+}
+
+.hud-info {
+  display: flex;
+  justify-content: space-around;
+  background: rgba(10, 10, 10, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 8px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(232, 224, 212, 0.06);
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.info-icon {
+  font-size: 14px;
+}
+
+.info-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--bone-white);
+}
+
+/* Damage flash */
+.damage-flash {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(139, 0, 0, 0.6) 100%);
+  z-index: var(--z-overlay);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+}
+
+.damage-flash.active {
+  opacity: 1;
+  animation: damageFlash 0.4s ease-out forwards;
+}
+
+@keyframes damageFlash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* GPS Status */
+.gps-status {
+  position: absolute;
+  bottom: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(10, 10, 10, 0.9);
+  border-radius: 20px;
+  border: 1px solid rgba(0, 204, 68, 0.2);
+  font-size: 12px;
+  color: var(--ash-grey);
+  z-index: var(--z-hud);
+  transition: opacity 0.5s ease;
+}
+
+.gps-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--perk-gold);
+  animation: gpsBlink 1.5s ease-in-out infinite;
+}
+
+.gps-dot.locked {
+  background: var(--toxic-green);
+  animation: none;
+}
+
+@keyframes gpsBlink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* ============================================
+   GAME OVER SCREEN
+   ============================================ */
+#gameover-screen {
+  background: rgba(5, 5, 5, 0.95);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.8s ease;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.gameover-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 40px 24px;
+}
+
+.gameover-title {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 14vw, 80px);
+  color: var(--blood-bright);
+  text-shadow:
+    0 0 30px rgba(204, 17, 0, 0.6),
+    0 0 80px rgba(204, 17, 0, 0.3);
+  animation: deathPulse 2s ease-in-out infinite;
+}
+
+@keyframes deathPulse {
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
+.gameover-skull {
+  font-size: 64px;
+  animation: skullBob 3s ease-in-out infinite;
+}
+
+@keyframes skullBob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-5px) rotate(-2deg); }
+  75% { transform: translateY(-5px) rotate(2deg); }
+}
+
+.gameover-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.go-stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: rgba(26, 26, 30, 0.8);
+  border-radius: 8px;
+  border: 1px solid rgba(232, 224, 212, 0.06);
+}
+
+.go-stat.final-score {
+  border-color: rgba(255, 193, 7, 0.3);
+  background: rgba(255, 193, 7, 0.05);
+  margin-top: 4px;
+}
+
+.go-stat-label {
+  font-size: 12px;
+  color: var(--ash-grey);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.go-stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--bone-white);
+}
+
+.final-score .go-stat-value {
+  color: var(--perk-gold);
+  text-shadow: 0 0 10px rgba(255, 193, 7, 0.4);
+}
+
+/* ============================================
+   SIMULATION CONTROLS (Dev/Testing)
+   ============================================ */
+#sim-toggle {
+  position: fixed;
+  bottom: 180px;
+  right: 12px;
+  z-index: var(--z-modal);
+}
+
+.btn-sim {
+  padding: 8px 12px;
+  background: rgba(34, 153, 255, 0.2);
+  border: 1px solid rgba(34, 153, 255, 0.4);
+  border-radius: 8px;
+  color: var(--perk-blue);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#sim-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: 8px;
+}
+
+#sim-controls button {
+  width: 40px;
+  height: 40px;
+  background: rgba(34, 153, 255, 0.15);
+  border: 1px solid rgba(34, 153, 255, 0.3);
+  border-radius: 8px;
+  color: var(--perk-blue);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+#sim-controls div {
+  display: flex;
+  gap: 2px;
+}
+
+/* ============================================
+   CUSTOM MAP MARKERS
+   ============================================ */
+.marker-player {
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, var(--perk-blue) 40%, rgba(34, 153, 255, 0.3) 100%);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(34, 153, 255, 0.6), 0 0 24px rgba(34, 153, 255, 0.3);
+  animation: playerPulse 2s ease-in-out infinite;
+}
+
+@keyframes playerPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(34, 153, 255, 0.6); }
+  50% { box-shadow: 0 0 20px rgba(34, 153, 255, 0.9), 0 0 40px rgba(34, 153, 255, 0.3); }
+}
+
+.marker-zombie {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.marker-zombie.walker {
+  background: radial-gradient(circle, #55cc55 30%, #227722);
+  box-shadow: 0 0 6px rgba(0, 204, 68, 0.4);
+}
+
+.marker-zombie.runner {
+  background: radial-gradient(circle, #ffcc00 30%, #cc8800);
+  box-shadow: 0 0 6px rgba(255, 204, 0, 0.4);
+}
+
+.marker-zombie.screamer {
+  background: radial-gradient(circle, #ff4444 30%, #aa0000);
+  box-shadow: 0 0 8px rgba(255, 34, 0, 0.6);
+  animation: screamerGlow 0.6s ease-in-out infinite alternate;
+}
+
+@keyframes screamerGlow {
+  0% { box-shadow: 0 0 6px rgba(255, 34, 0, 0.4); }
+  100% { box-shadow: 0 0 14px rgba(255, 34, 0, 0.8); }
+}
+
+.marker-perk {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  background: rgba(10, 10, 10, 0.8);
+  border: 2px solid rgba(255, 193, 7, 0.5);
+  box-shadow: 0 0 10px rgba(255, 193, 7, 0.3);
+  animation: perkFloat 2s ease-in-out infinite;
+}
+
+@keyframes perkFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* ============================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================ */
+@media (max-width: 380px) {
+  .health-bar-outer { width: 70px; }
+  .inv-slot { width: 44px; height: 44px; font-size: 20px; }
+  .compass-ring { width: 52px; height: 52px; }
+}
+
+@media (min-width: 768px) {
+  /* Tablet / Desktop — for testing */
+  .health-bar-outer { width: 140px; }
+  .inv-slot { width: 60px; height: 60px; }
+}

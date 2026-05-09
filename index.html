@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>ZombieWalk — Survive the Dark</title>
+  <meta name="description" content="GPS-based zombie survival game. Walk in real life. Hear them coming. Stay alive." />
+
+  <!-- Leaflet.js for real maps -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Creepster&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- ============ SPLASH / TITLE SCREEN ============ -->
+  <div id="splash-screen" class="screen active">
+    <div class="splash-content">
+      <div class="splash-fog"></div>
+      <h1 class="game-title">
+        <span class="title-zombie">ZOMBIE</span>
+        <span class="title-walk">WALK</span>
+      </h1>
+      <p class="tagline">They're out there. Keep moving.</p>
+      <div class="pulse-ring"></div>
+      <button id="btn-start" class="btn-primary" onclick="startGame()">
+        <span class="btn-icon">☠️</span>
+        <span>BEGIN SURVIVAL</span>
+      </button>
+      <p class="splash-hint">🎧 Headphones recommended for spatial audio</p>
+      <div class="splash-stats" id="splash-stats" style="display:none;">
+        <div class="stat-item">
+          <span class="stat-label">Best Survival</span>
+          <span class="stat-value" id="best-time">--:--</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">High Score</span>
+          <span class="stat-value" id="high-score">0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ GAME SCREEN ============ -->
+  <div id="game-screen" class="screen">
+    <!-- Map container -->
+    <div id="map-container">
+      <div id="map"></div>
+      <canvas id="fog-canvas"></canvas>
+    </div>
+
+    <!-- HUD Overlay -->
+    <div id="hud">
+      <!-- Top bar -->
+      <div class="hud-top">
+        <div class="hud-health">
+          <div class="health-icon">❤️</div>
+          <div class="health-bar-outer">
+            <div class="health-bar-inner" id="health-bar"></div>
+          </div>
+          <span class="health-text" id="health-text">100</span>
+        </div>
+        <div class="hud-score">
+          <span class="score-label">SCORE</span>
+          <span class="score-value" id="score-value">0</span>
+        </div>
+      </div>
+
+      <!-- Danger indicator -->
+      <div class="hud-danger" id="danger-indicator" style="display:none;">
+        <div class="danger-pulse"></div>
+        <span class="danger-text">⚠️ DANGER</span>
+      </div>
+
+      <!-- Compass / directional indicator -->
+      <div class="hud-compass" id="compass">
+        <div class="compass-ring">
+          <div class="compass-arrow" id="compass-arrow"></div>
+          <div class="compass-label">NEAREST</div>
+        </div>
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="hud-bottom">
+        <div class="hud-inventory" id="inventory">
+          <div class="inv-slot" id="inv-slot-0" onclick="useItem(0)"></div>
+          <div class="inv-slot" id="inv-slot-1" onclick="useItem(1)"></div>
+          <div class="inv-slot" id="inv-slot-2" onclick="useItem(2)"></div>
+          <div class="inv-slot" id="inv-slot-3" onclick="useItem(3)"></div>
+        </div>
+        <div class="hud-info">
+          <div class="info-item">
+            <span class="info-icon">🧟</span>
+            <span class="info-value" id="zombie-count">0</span>
+          </div>
+          <div class="info-item">
+            <span class="info-icon">📏</span>
+            <span class="info-value" id="distance-walked">0m</span>
+          </div>
+          <div class="info-item">
+            <span class="info-icon">⏱️</span>
+            <span class="info-value" id="survival-time">0:00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Damage flash overlay -->
+    <div class="damage-flash" id="damage-flash"></div>
+
+    <!-- GPS status indicator -->
+    <div class="gps-status" id="gps-status">
+      <span class="gps-dot"></span>
+      <span>Acquiring GPS...</span>
+    </div>
+  </div>
+
+  <!-- ============ GAME OVER SCREEN ============ -->
+  <div id="gameover-screen" class="screen">
+    <div class="gameover-content">
+      <h1 class="gameover-title">YOU DIED</h1>
+      <div class="gameover-skull">💀</div>
+      <div class="gameover-stats">
+        <div class="go-stat">
+          <span class="go-stat-label">Time Survived</span>
+          <span class="go-stat-value" id="go-time">0:00</span>
+        </div>
+        <div class="go-stat">
+          <span class="go-stat-label">Distance Walked</span>
+          <span class="go-stat-value" id="go-distance">0m</span>
+        </div>
+        <div class="go-stat">
+          <span class="go-stat-label">Zombies Evaded</span>
+          <span class="go-stat-value" id="go-evaded">0</span>
+        </div>
+        <div class="go-stat">
+          <span class="go-stat-label">Perks Collected</span>
+          <span class="go-stat-value" id="go-perks">0</span>
+        </div>
+        <div class="go-stat final-score">
+          <span class="go-stat-label">FINAL SCORE</span>
+          <span class="go-stat-value" id="go-score">0</span>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="restartGame()">
+        <span class="btn-icon">🔄</span>
+        <span>TRY AGAIN</span>
+      </button>
+      <button class="btn-secondary" onclick="goHome()">
+        <span>MAIN MENU</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ SIMULATION MODE TOGGLE (for testing without GPS) ============ -->
+  <div id="sim-toggle" style="display:none;">
+    <button id="btn-sim" class="btn-sim" onclick="toggleSimMode()">🎮 SIM</button>
+    <div id="sim-controls" style="display:none;">
+      <button onclick="simMove('n')">↑</button>
+      <div>
+        <button onclick="simMove('w')">←</button>
+        <button onclick="simMove('e')">→</button>
+      </div>
+      <button onclick="simMove('s')">↓</button>
+    </div>
+  </div>
+
+  <script src="geo-utils.js"></script>
+  <script src="audio-engine.js"></script>
+  <script src="game-engine.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
