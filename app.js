@@ -620,37 +620,70 @@ function onPlayerDeath() {
   }, 800);
 }
 
+// ---- Mobile Debug Overlay ----
+function debugLog(msg) {
+  console.log(msg);
+  let overlay = document.getElementById('debug-overlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'debug-overlay';
+    overlay.style.cssText = `
+      position: fixed; bottom: 0; left: 0; right: 0; max-height: 40vh;
+      overflow-y: auto; background: rgba(0,0,0,0.9); color: #0f0;
+      font-family: monospace; font-size: 11px; padding: 8px;
+      z-index: 99999; pointer-events: none;
+    `;
+    document.body.appendChild(overlay);
+  }
+  const line = document.createElement('div');
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  overlay.appendChild(line);
+  overlay.scrollTop = overlay.scrollHeight;
+}
+
 // ---- Start / Restart ----
 function startGame() {
+  debugLog('startGame() called');
   try {
     // Show game screen FIRST (must happen while user gesture is still active)
+    debugLog('Switching to game screen...');
     showScreen('game-screen');
+    debugLog('Screen switched OK');
 
     // Init map if not already done
     if (!map) {
+      debugLog('Initializing map...');
       initMap();
+      debugLog('Map initialized OK');
     }
 
     // Start GPS tracking immediately (needs user gesture context for permission prompt)
+    debugLog('Starting GPS...');
     startGPS();
+    debugLog('GPS started OK');
 
     // Start compass (needs user gesture context on iOS for DeviceOrientation permission)
+    debugLog('Starting compass...');
     startCompass();
+    debugLog('Compass started OK');
 
     // Init audio AFTER — don't block the above with await
     // Audio also benefits from user gesture but is non-critical
+    debugLog('Initializing audio...');
     AudioEngine.init()
       .then(() => {
         AudioEngine.resume();
-        console.log('[App] Audio ready');
+        debugLog('Audio ready');
       })
       .catch((audioErr) => {
-        console.warn('[App] Audio init failed (non-blocking):', audioErr);
+        debugLog('Audio init failed (non-blocking): ' + audioErr.message);
       });
 
     // Show sim toggle for desktop testing
     document.getElementById('sim-toggle').style.display = 'block';
+    debugLog('startGame() completed successfully');
   } catch (err) {
+    debugLog('ERROR in startGame(): ' + err.message);
     console.error('[App] startGame() failed:', err);
     alert('Failed to start game: ' + err.message);
   }
