@@ -620,74 +620,38 @@ function onPlayerDeath() {
   }, 800);
 }
 
-// ---- Mobile Debug Overlay ----
-function debugLog(msg) {
-  console.log(msg);
-  let overlay = document.getElementById('debug-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'debug-overlay';
-    overlay.style.cssText = `
-      position: fixed; bottom: 0; left: 0; right: 0; max-height: 40vh;
-      overflow-y: auto; background: rgba(0,0,0,0.9); color: #0f0;
-      font-family: monospace; font-size: 11px; padding: 8px;
-      z-index: 99999; pointer-events: none;
-    `;
-    document.body.appendChild(overlay);
-  }
-  const line = document.createElement('div');
-  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-  overlay.appendChild(line);
-  overlay.scrollTop = overlay.scrollHeight;
-}
-
 // ---- Start / Restart ----
 function startGame() {
-  debugLog('startGame() called');
   try {
     // Unlock audio FIRST — must be synchronous during user gesture for iOS
-    debugLog('Unlocking audio...');
     AudioEngine.unlockAudio();
-    debugLog('Audio unlocked');
 
     // Show game screen
-    debugLog('Switching to game screen...');
     showScreen('game-screen');
-    debugLog('Screen switched OK');
 
     // Init map if not already done
     if (!map) {
-      debugLog('Initializing map...');
       initMap();
-      debugLog('Map initialized OK');
     }
 
     // Start GPS tracking immediately
-    debugLog('Starting GPS...');
     startGPS();
-    debugLog('GPS started OK');
 
     // Start compass
-    debugLog('Starting compass...');
     startCompass();
-    debugLog('Compass started OK');
 
     // Generate audio buffers in background (non-blocking)
-    debugLog('Generating audio buffers...');
     AudioEngine.init()
       .then(() => {
         AudioEngine.resume();
-        debugLog('Audio fully ready');
       })
       .catch((audioErr) => {
-        debugLog('Audio init failed (non-blocking): ' + audioErr.message);
+        console.warn('Audio init failed (non-blocking):', audioErr);
       });
 
     // Show sim toggle for desktop testing
     document.getElementById('sim-toggle').style.display = 'block';
-    debugLog('startGame() completed successfully');
   } catch (err) {
-    debugLog('ERROR in startGame(): ' + err.message);
     console.error('[App] startGame() failed:', err);
     alert('Failed to start game: ' + err.message);
   }
