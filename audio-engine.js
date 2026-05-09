@@ -174,10 +174,13 @@ const AudioEngine = (() => {
 
   // ---- Core API ----
 
+  // Hidden audio element for iOS media channel routing
+  let mediaStreamAudio = null;
+
   /**
    * Unlock audio on iOS — MUST be called synchronously during a user gesture (tap/click).
-   * Uses an <audio> element trick to force iOS to use the MEDIA volume channel
-   * (ignores silent/mute switch) instead of the ringer channel.
+   * Routes Web Audio output through an <audio> element via MediaStreamDestination,
+   * which forces iOS to use the MEDIA volume channel (like YouTube) instead of ringer.
    */
   function unlockAudio() {
     if (audioCtx) {
@@ -188,41 +191,27 @@ const AudioEngine = (() => {
     }
 
     try {
-      // Step 1: Play an <audio> element to force iOS into "media playback" mode.
-      // This makes Web Audio use the MEDIA volume (ignores mute switch).
-      // Tiny silent WAV as data URI (44 bytes)
-      const silentAudio = new Audio(
-        'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA='
-      );
-      silentAudio.setAttribute('playsinline', '');
-      silentAudio.play().catch(() => {});
-
-      // Step 2: Create the Web Audio context
+      // Create Web Audio context
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      console.log('[AudioEngine] AudioContext created, state:', audioCtx.state);
 
-      // Resume immediately (must happen during user gesture on iOS)
-      const resumePromise = audioCtx.resume();
-      if (resumePromise) {
-        resumePromise.then(() => {
-          console.log('[AudioEngine] AudioContext resumed, state:', audioCtx.state);
-        });
+      // Resume immediately during user gesture
+      audioCtx.resume();
+
+      // Route output through <audio> element to bypass iOS mute switch
+      // This is the same technique YouTube uses — media elements use the media channel
+      if (audioCtx.createMediaStreamDestination) {
+        const mediaStreamDest = audioCtx.createMediaStreamDestination();
+
+        mediaStreamAudio = new Audio();
+        mediaStreamAudio.srcObject = mediaStreamDest.stream;
+        mediaStreamAudio.setAttribute('playsinline', '');
+        mediaStreamAudio.play().catch(() => {});
+
+        // Store the destination so init() can connect masterGain to it
+        audioCtx._mediaStreamDest = mediaStreamDest;
       }
 
-      // Step 3: Play a short beep to confirm audio is working
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = 440;
-      gain.gain.value = 0.2;
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.2);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start(audioCtx.currentTime);
-      osc.stop(audioCtx.currentTime + 0.2);
-
-      console.log('[AudioEngine] Audio unlocked (media channel), state:', audioCtx.state);
+      console.log('[AudioEngine] Audio unlocked, state:', audioCtx.state);
     } catch (e) {
       console.error('[AudioEngine] Failed to unlock audio:', e);
     }
@@ -244,7 +233,14 @@ const AudioEngine = (() => {
       // Master volume
       masterGain = audioCtx.createGain();
       masterGain.gain.value = 0.8;
+
+      // Connect to BOTH destinations:
+      // 1. Normal audio output (for non-iOS / desktop)
       masterGain.connect(audioCtx.destination);
+      // 2. MediaStream destination (for iOS media channel)
+      if (audioCtx._mediaStreamDest) {
+        masterGain.connect(audioCtx._mediaStreamDest);
+      }
 
       // Ambient channel
       ambientGain = audioCtx.createGain();
