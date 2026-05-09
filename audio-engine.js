@@ -175,13 +175,45 @@ const AudioEngine = (() => {
   // ---- Core API ----
 
   /**
-   * Initialize the audio engine (must be called from user gesture)
+   * Unlock audio on iOS — MUST be called synchronously during a user gesture (tap/click).
+   * Creates the AudioContext and plays a silent buffer to satisfy iOS autoplay restrictions.
+   */
+  function unlockAudio() {
+    if (audioCtx) return; // already unlocked
+
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+      // Resume immediately (must happen during user gesture on iOS)
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      // Play a silent buffer to fully unlock iOS audio
+      const silentBuffer = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+      const silentSource = audioCtx.createBufferSource();
+      silentSource.buffer = silentBuffer;
+      silentSource.connect(audioCtx.destination);
+      silentSource.start(0);
+
+      console.log('[AudioEngine] Audio unlocked, state:', audioCtx.state);
+    } catch (e) {
+      console.error('[AudioEngine] Failed to unlock audio:', e);
+    }
+  }
+
+  /**
+   * Initialize the audio engine — generates all sound buffers.
+   * Can be called after unlockAudio().
    */
   async function init() {
     if (initialized) return;
 
     try {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      // Ensure AudioContext exists
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
 
       // Master volume
       masterGain = audioCtx.createGain();
@@ -415,6 +447,7 @@ const AudioEngine = (() => {
   }
 
   return {
+    unlockAudio,
     init,
     updateListenerHeading,
     updateZombieSound,

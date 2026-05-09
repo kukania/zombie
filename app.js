@@ -645,7 +645,12 @@ function debugLog(msg) {
 function startGame() {
   debugLog('startGame() called');
   try {
-    // Show game screen FIRST (must happen while user gesture is still active)
+    // Unlock audio FIRST — must be synchronous during user gesture for iOS
+    debugLog('Unlocking audio...');
+    AudioEngine.unlockAudio();
+    debugLog('Audio unlocked');
+
+    // Show game screen
     debugLog('Switching to game screen...');
     showScreen('game-screen');
     debugLog('Screen switched OK');
@@ -657,23 +662,22 @@ function startGame() {
       debugLog('Map initialized OK');
     }
 
-    // Start GPS tracking immediately (needs user gesture context for permission prompt)
+    // Start GPS tracking immediately
     debugLog('Starting GPS...');
     startGPS();
     debugLog('GPS started OK');
 
-    // Start compass (needs user gesture context on iOS for DeviceOrientation permission)
+    // Start compass
     debugLog('Starting compass...');
     startCompass();
     debugLog('Compass started OK');
 
-    // Init audio AFTER — don't block the above with await
-    // Audio also benefits from user gesture but is non-critical
-    debugLog('Initializing audio...');
+    // Generate audio buffers in background (non-blocking)
+    debugLog('Generating audio buffers...');
     AudioEngine.init()
       .then(() => {
         AudioEngine.resume();
-        debugLog('Audio ready');
+        debugLog('Audio fully ready');
       })
       .catch((audioErr) => {
         debugLog('Audio init failed (non-blocking): ' + audioErr.message);
