@@ -42,6 +42,7 @@ The project is a single-page web app. All logic runs in the browser; there is no
 ```
 index.html        ← Shell / HTML structure + screen layout
 style.css         ← All styling (dark theme, HUD, animations)
+config/game-config.js ← Game constants and tuning values
 geo-utils.js      ← GPS math library (loads first)
 audio-engine.js   ← Spatial audio system (loads second)
 game-engine.js    ← Core game logic (loads third)
@@ -100,8 +101,10 @@ Spatial audio system using the Web Audio API. Exposes a single global `AudioEngi
 | `updateListenerHeading(deg)` | Rotates the Web Audio listener orientation to match compass heading |
 | `updateZombieSound(id, bearing, dist, type)` | Create/update a 3D HRTF-panned spatial audio source for a zombie |
 | `removeZombieSound(id)` | Stop and remove the spatial source for a zombie that despawned |
+| `updateRefugeeBeacon(bearing, dist)` | Pulse an HRTF audio beacon pointing toward the exit |
 | `playUI(soundName, volume)` | Non-spatial one-shot sound (pickup chime, hurt sfx) |
-| `startAmbient()` / `stopAmbient()` | Looping brown-noise wind ambience |
+| `playVictory()` | Non-spatial one-shot victory chime |
+| `startAmbient()` / `stopAmbient()` | Looping brown-noise wind ambience (can be muted in config) |
 | `startHeartbeat()` / `stopHeartbeat()` | Looping heartbeat at low health |
 | `cleanup()` | Stop all sources (called on death) |
 | `resume()` | Resume suspended AudioContext (mobile lifecycle) |
@@ -118,7 +121,7 @@ Spatial audio system using the Web Audio API. Exposes a single global `AudioEngi
 ### `game-engine.js`
 Core game logic — pure data/state, no DOM. Exposes a single global `GameEngine` IIFE object.
 
-**CONFIG values (tunable):**
+**CONFIG values (tunable in `config/game-config.js`):**
 
 | Parameter | Value | Meaning |
 |---|---|---|
@@ -161,6 +164,7 @@ Core game logic — pure data/state, no DOM. Exposes a single global `GameEngine
 - +1 pt per meter walked
 - +2 pts per second survived
 - +50 pts per perk collected
+- + Base Escape Bonus + Health/Time multipliers (when reaching the Refugee)
 
 **Difficulty ramp:** Every 60 seconds, `difficultyLevel` increments. `maxZombies` increases (cap: 20), `spawnIntervalS` decreases (floor: 3s), and zombie chase speed gets a multiplier.
 
@@ -175,12 +179,12 @@ The top-level application controller. Ties all systems together and owns the DOM
 - **Main game loop** — `setInterval` at 1 Hz calling `GameEngine.update()` then:
   - Updating Leaflet map view and player marker
   - Redrawing fog
-  - Adding/removing/repositioning Leaflet markers for zombies and perks
-  - Updating spatial audio for each zombie in range
+  - Adding/removing/repositioning Leaflet markers for zombies, perks, and the Refugee
+  - Updating spatial audio for each zombie in range and the Refugee beacon
   - Updating all HUD elements
   - Rotating compass arrow toward nearest zombie
   - Triggering heartbeat audio at low health
   - Dispatching game events (hit flash, death, pickup sounds, vibration)
 - **HUD rendering** — health bar, score, zombie count, distance walked, survival timer, 4-slot inventory
-- **Game Over** — stops loop, calls `AudioEngine.cleanup()`, shows stats screen, saves high score to `localStorage`
-- **High score persistence** — `localStorage` keys: `zw_highscore`, `zw_besttime`
+- **Game Over & Victory** — stops loop, calls `AudioEngine.cleanup()`, shows stats screen (Death or Escaped), saves high score and escape stats to `localStorage`
+- **High score persistence** — `localStorage` keys: `zw_highscore`, `zw_besttime`, `zw_escapes`, `zw_best_escape_time`

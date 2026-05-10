@@ -28,7 +28,7 @@
 
 ---
 
-## Milestone 1 — Refugee: Win Condition & Exit Object 🔲
+## Milestone 1 — Refugee: Win Condition & Exit Object ✅
 > *The game currently only ends in death. A run needs a victory state — a place the player is trying to reach.*
 
 **Problem:** There is no win condition. The only outcome is dying, which makes each run feel purposeless. A goal destination gives the player something to navigate toward, creating tension between "stay safe" and "push toward the exit."
@@ -42,13 +42,13 @@
 - ❓ **Multiple runs in one session** — After reaching the Refugee, a new one spawns farther away for a continuous run?
 
 ### Tasks
-- 🔲 **Refugee object in `game-engine.js`** — Spawn a single Refugee at a fixed bearing/distance from the player's starting GPS on `init()`. Store as `state.refugee = { lat, lon, reached: false }`
-- 🔲 **Win condition check** — In the update loop, if `distance(player, refugee) < pickupRangeM`, trigger `{ type: 'refugee_reached' }` event and set `state.running = false`
-- 🔲 **Refugee marker in `app.js`** — Render a distinct Leaflet divIcon for the Refugee (e.g., 🏠 or a green safe-zone ring). Always visible on the map (not fog-gated), so the player always knows which direction to head.
-- 🔲 **Audio beacon** — Emit a faint, non-spatial (centered) low ambient tone that pulses at a rate inversely proportional to distance from the Refugee. As you get closer, the pulse speeds up — like a sonar ping. This lets eyes-free players orient toward the goal using sound alone.
-- 🔲 **Victory screen** — New `#victory-screen` distinct from `#gameover-screen`. Shows survival time, distance walked, zombies evaded, perks used, and a "ESCAPED" headline. Different tone from "YOU DIED".
-- 🔲 **Scoring integration** — Reaching the Refugee grants a large score bonus. Bonus scales with remaining health and remaining time (faster escape = higher bonus).
-- 🔲 **localStorage** — Track best escape time and escape count separately from death-based high score (`zw_escapes`, `zw_best_escape_time`).
+- ✅ **Refugee object in `game-engine.js`** — Spawn a single Refugee at a fixed bearing/distance from the player's starting GPS on `init()`. Store as `state.refugee = { lat, lon, reached: false }`
+- ✅ **Win condition check** — In the update loop, if `distance(player, refugee) < pickupRangeM`, trigger `{ type: 'refugee_reached' }` event and set `state.running = false`
+- ✅ **Refugee marker in `app.js`** — Render a distinct Leaflet divIcon for the Refugee (e.g., 🏠 or a green safe-zone ring). Always visible on the map (not fog-gated), so the player always knows which direction to head.
+- ✅ **Audio beacon** — Emit a spatial HRTF ping that pulses at a rate inversely proportional to distance from the Refugee. As you get closer, the pulse speeds up — like a sonar ping. This lets eyes-free players orient toward the goal using sound alone.
+- ✅ **Victory screen** — New `#victory-screen` distinct from `#gameover-screen`. Shows survival time, distance walked, zombies evaded, perks used, and a "ESCAPED" headline. Different tone from "YOU DIED".
+- ✅ **Scoring integration** — Reaching the Refugee grants a large score bonus. Bonus scales with remaining health and remaining time (faster escape = higher bonus).
+- ✅ **localStorage** — Track best escape time and escape count separately from death-based high score (`zw_escapes`, `zw_best_escape_time`).
 
 ---
 
