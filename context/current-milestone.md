@@ -608,12 +608,25 @@ Each step is independently testable in simulation mode (desktop, SIM button).
 - [ ] **Audio Beacon (HRTF test):** Put on headphones. You should hear a slow, electronic "ping" every 4 seconds. As you rotate your character, verify that the ping shifts left or right depending on where the Refugee is.
 - [ ] **The "Final Push" Escalation:** Use SIM directional arrows to walk toward the Refugee. When HUD distance is <200m, verify: screen edges gain a pulsing red tint, brief message `"⚠️ They sense the refuge..."` appears, and zombies spawn noticeably faster.
 - [ ] **Victory Condition:** Walk until distance is <15m. Game should stop, 3-note Victory chime should play, and new **"ESCAPED"** screen should appear. Verify `Escape Bonus` is added to `FINAL SCORE`.
-- [ ] **Restarting:** Click "RUN AGAIN". Verify the game resets cleanly: red edge tint disappears, a new Refugee spawns, and HUD distance resets to ~500m.
-- [ ] **Death still works**: Dying still shows game-over screen, not victory screen.
+- [x] **Restarting:** Click "RUN AGAIN". Verify the game resets cleanly: red edge tint disappears, a new Refugee spawns, and HUD distance resets to ~500m.
+- [x] **Death still works**: Dying still shows game-over screen, not victory screen.
 
 ### 📱 Mobile Field Test (iOS/Android)
 - [ ] **Audio Context Resiliency:** Start a run on your phone. Lock your screen, wait 30s, and unlock. Verify the audio beacon is still pinging.
 - [ ] **Eyes-Free Navigation:** Point your phone in different directions and listen to the ping panning between your left and right earbuds. Pointing directly at the Refugee should center the ping. Walk closer, listen for the ping interval to speed up and pitch to get slightly higher.
+
+---
+
+## M1 Feedback & Issues
+
+### Addressed in M1
+- **Ambient sound:** "No background sound is better. Make it default." → Set `muteAmbient: true` in config as the default.
+- **Restart Bug:** "When I restart it, it shows two character markers." → Fixed double `playerMarker` bug in `app.js` by cleaning up the old marker on restart.
+- **Marker Legend:** "Please show which color is what (zombie, perk, player, refugee)." → Need to add a visual legend or clearer UI icons in the next polish pass. (Currently: Player = Blue dot, Refugee = Green ring with house, Zombie = Red dots, Perk = Yellow icons).
+
+### Deferred to Future Milestones
+- **Zombie Speed:** "Zombie should follow user. it may already be applied, but it is too slow." → Zombies do follow, but their speed is conservative for walking safety. We can adjust the difficulty ramp or base speed in config for M2.
+- **Simulation Responsiveness:** "The response time is slow in sim." → Simulation ticks at the game's standard 1Hz (1 update per second) to mimic real GPS rate limitations. This makes SIM movement feel slightly delayed compared to immediate keypresses.
 
 ---
 

@@ -303,6 +303,9 @@ function onFirstGPSFix(lat, lon) {
   map.setView([lat, lon], 17);
 
   // Create player marker
+  if (playerMarker) {
+    map.removeLayer(playerMarker);
+  }
   playerMarker = L.marker([lat, lon], {
     icon: createMarkerIcon('player'),
     zIndexOffset: 1000,
