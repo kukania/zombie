@@ -9,13 +9,17 @@ This document outlines the standard operating procedures and rules for collabora
 - **Define tasks upfront:** Before writing code for a new feature or milestone, the AI must list all actionable tasks in the first section of `current-milestone.md`.
 - **Include testing plans:** Every milestone plan in `current-milestone.md` *must* include a dedicated "Testing Checklist" section outlining how the new features will be verified (both in desktop simulation and mobile field testing).
 - **Track progress:** Update the task list in `current-milestone.md` (e.g., using `[x]` checkboxes) as work progresses.
+- **End of Milestone Protocol:** When a milestone is completed, the AI must update `context/project-description.md` and `context/milestones.md` to reflect all changes and logic established in `current-milestone.md`.
 
 ## 3. Version Control
 - **Frequent commits:** Whenever a distinct task or logical chunk of work is completed, the AI must commit and push the changes to GitHub immediately. Do not wait for the entire milestone to be finished before pushing.
 
 ## 4. User Feedback
 - **Log all feedback:** Any feedback, bug reports, or feature tweaks provided by the user must be summarized and appended to the "Feedback & Issues" section at the bottom of `current-milestone.md`.
-- **Categorize feedback:** Clearly distinguish between feedback addressed in the current milestone and feedback deferred to future milestones.
+- **Categorize feedback:** In `current-milestone.md`, explicitly separate feedback into two distinct categories:
+  1. **Feedback for current milestone** (things to fix or implement right now).
+  2. **Feedback for future milestone** (things deferred to later).
+- **Future Milestone Routing:** When updating `milestones.md` at the end of a milestone, the AI must take the "Feedback for future milestone" items and categorize them into the proper upcoming milestone block, or create a new milestone block for them if they don't fit existing ones.
 
 ## 5. Testing & Verification
 - **Clear test plans:** If the AI needs the user to test a specific feature or bug fix, the AI must provide a structured, step-by-step test plan detailing exactly *what* to do and *what to expect*.

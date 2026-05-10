@@ -619,14 +619,14 @@ Each step is independently testable in simulation mode (desktop, SIM button).
 
 ## M1 Feedback & Issues
 
-### Addressed in M1
-- **Ambient sound:** "No background sound is better. Make it default." → Set `muteAmbient: true` in config as the default.
-- **Restart Bug:** "When I restart it, it shows two character markers." → Fixed double `playerMarker` bug in `app.js` by cleaning up the old marker on restart.
-- **Marker Legend:** "Please show which color is what (zombie, perk, player, refugee)." → Need to add a visual legend or clearer UI icons in the next polish pass. (Currently: Player = Blue dot, Refugee = Green ring with house, Zombie = Red dots, Perk = Yellow icons).
+### 1. Feedback for Current Milestone
+- **Ambient sound:** "No background sound is better. Make it default." → Set `muteAmbient: true` in config as the default. (Addressed)
+- **Restart Bug:** "When I restart it, it shows two character markers." → Fixed double `playerMarker` bug in `app.js` by cleaning up the old marker on restart. (Addressed)
+- **Marker Legend:** "Please show which color is what (zombie, perk, player, refugee)." → Added a visual map legend to the HUD to clarify marker types. (Addressed)
 
-### Deferred to Future Milestones
-- **Zombie Speed:** "Zombie should follow user. it may already be applied, but it is too slow." → Zombies do follow, but their speed is conservative for walking safety. We can adjust the difficulty ramp or base speed in config for M2.
-- **Simulation Responsiveness:** "The response time is slow in sim." → Simulation ticks at the game's standard 1Hz (1 update per second) to mimic real GPS rate limitations. This makes SIM movement feel slightly delayed compared to immediate keypresses.
+### 2. Feedback for Future Milestone
+- **Zombie Speed:** "Zombie should follow user. it may already be applied, but it is too slow." → Deferred to a future difficulty tuning pass (added to M2).
+- **Simulation Responsiveness:** "The response time is slow in sim." → Deferred to a future Quality of Life update to increase simulation tick rate for easier desktop testing (added to M2).
 
 ---
 

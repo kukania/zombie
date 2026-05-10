@@ -89,6 +89,8 @@
   - Long rumble → being attacked
   - Pattern (200-100-400) → death (already done)
 - 🔲 **Accessibility audit** — Verify the game is fully playable without looking at the screen at all (eyes-free test session)
+- 🔲 **QoL: Zombie Speed Tuning** — Adjust base speed or difficulty ramp for zombie chasing (from M1 user feedback).
+- 🔲 **QoL: Simulation Responsiveness** — Increase SIM mode tick rate from 1Hz to something faster to improve desktop testing responsiveness (from M1 user feedback).
 
 ---
 
