@@ -603,15 +603,17 @@ Each step is independently testable in simulation mode (desktop, SIM button).
 
 ## Testing Checklist
 
-- [ ] **Sim mode — refugee spawns**: Open console, verify `[GameEngine] Refugee at ...` log on game start
-- [ ] **Sim mode — navigate to refugee**: Use SIM arrow buttons to walk toward the refugee marker on the map; confirm victory screen triggers
-- [ ] **Audio beacon**: Beacon ping plays and accelerates as you approach (test with headphones)
-- [ ] **Final push**: Passing 200m from refugee triggers red edge overlay and "They sense the refuge..." text
-- [ ] **Victory screen**: All stats populated correctly; escape bonus displayed
-- [ ] **localStorage**: `zw_escapes` and `zw_best_escape_time` written after victory
-- [ ] **Death still works**: Dying still shows game-over screen, not victory screen
-- [ ] **Restart from victory**: "RUN AGAIN" button clears markers, starts new run with new refugee position
-- [ ] **iOS**: AudioContext stays alive; victory sound plays; beacon stops cleanly on victory
+### 🎮 Desktop Simulation Test
+- [ ] **Initial Spawn & UI:** Open the game on desktop, click **SIM**. Check map for new green 🏠 **Refugee marker**. HUD should display green 🏠 icon with distance (~500m).
+- [ ] **Audio Beacon (HRTF test):** Put on headphones. You should hear a slow, electronic "ping" every 4 seconds. As you rotate your character, verify that the ping shifts left or right depending on where the Refugee is.
+- [ ] **The "Final Push" Escalation:** Use SIM directional arrows to walk toward the Refugee. When HUD distance is <200m, verify: screen edges gain a pulsing red tint, brief message `"⚠️ They sense the refuge..."` appears, and zombies spawn noticeably faster.
+- [ ] **Victory Condition:** Walk until distance is <15m. Game should stop, 3-note Victory chime should play, and new **"ESCAPED"** screen should appear. Verify `Escape Bonus` is added to `FINAL SCORE`.
+- [ ] **Restarting:** Click "RUN AGAIN". Verify the game resets cleanly: red edge tint disappears, a new Refugee spawns, and HUD distance resets to ~500m.
+- [ ] **Death still works**: Dying still shows game-over screen, not victory screen.
+
+### 📱 Mobile Field Test (iOS/Android)
+- [ ] **Audio Context Resiliency:** Start a run on your phone. Lock your screen, wait 30s, and unlock. Verify the audio beacon is still pinging.
+- [ ] **Eyes-Free Navigation:** Point your phone in different directions and listen to the ping panning between your left and right earbuds. Pointing directly at the Refugee should center the ping. Walk closer, listen for the ping interval to speed up and pitch to get slightly higher.
 
 ---
 
