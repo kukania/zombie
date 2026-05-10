@@ -28,7 +28,7 @@
 
 ---
 
-## Milestone 1 — Refugee: Win Condition & Exit Object ✅
+## Milestone 1 — Refugee: Win Condition & Exit Object 🔄
 > *The game currently only ends in death. A run needs a victory state — a place the player is trying to reach.*
 
 **Problem:** There is no win condition. The only outcome is dying, which makes each run feel purposeless. A goal destination gives the player something to navigate toward, creating tension between "stay safe" and "push toward the exit."
