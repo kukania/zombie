@@ -46,4 +46,8 @@ const GAME_CONFIG = {
   scoreEscapeHealthMult: 3,    // bonus per HP remaining (max 300)
   scoreEscapeTimeMult: 0.5,    // bonus per second under par time (300s = 5min)
   scoreEscapeParTimeS: 300,    // par time in seconds (faster = bigger bonus)
+
+  // Testing & Debug
+  enableSimMode: false,        // Forces game into desktop simulation mode (ignores real GPS)
+  muteAmbient: false,          // Mutes the wind/background drone for easier audio testing
 };

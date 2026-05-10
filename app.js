@@ -164,6 +164,12 @@ function metersToPixels(meters) {
 
 // ---- GPS Tracking ----
 function startGPS() {
+  if (typeof GAME_CONFIG !== 'undefined' && GAME_CONFIG.enableSimMode) {
+    console.log('[GPS] Forced simulation mode via config');
+    enableSimMode();
+    return;
+  }
+
   if (!navigator.geolocation) {
     console.error('[GPS] Geolocation not supported');
     updateGPSStatus('GPS not supported', false);
@@ -175,6 +181,7 @@ function startGPS() {
 
   gpsWatchId = navigator.geolocation.watchPosition(
     (position) => {
+      if (simMode) return; // Prevent real GPS from overwriting simulation coords
       currentLat = position.coords.latitude;
       currentLon = position.coords.longitude;
       currentHeading = position.coords.heading || currentHeading;
@@ -235,6 +242,13 @@ function enableSimMode() {
 }
 
 function toggleSimMode() {
+  if (!simMode) {
+    enableSimMode();
+    // Re-center map to sim coords if we were using real GPS
+    if (map && currentLat && currentLon) {
+       map.setView([currentLat, currentLon], 17);
+    }
+  }
   const controls = document.getElementById('sim-controls');
   controls.style.display = controls.style.display === 'none' ? 'flex' : 'none';
 }
@@ -242,10 +256,10 @@ function toggleSimMode() {
 function simMove(dir) {
   const step = 0.0001; // ~11 meters
   switch (dir) {
-    case 'n': currentLat += step; break;
-    case 's': currentLat -= step; break;
-    case 'e': currentLon += step; break;
-    case 'w': currentLon -= step; break;
+    case 'n': currentLat += step; currentHeading = 0; break;
+    case 's': currentLat -= step; currentHeading = 180; break;
+    case 'e': currentLon += step; currentHeading = 90; break;
+    case 'w': currentLon -= step; currentHeading = 270; break;
   }
   simLat = currentLat;
   simLon = currentLon;
@@ -271,6 +285,8 @@ function startCompass() {
 }
 
 function onDeviceOrientation(event) {
+  if (simMode) return; // Ignore real compass if simulating
+
   // webkitCompassHeading for iOS, alpha for Android
   if (event.webkitCompassHeading != null) {
     currentHeading = event.webkitCompassHeading;

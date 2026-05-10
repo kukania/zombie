@@ -453,6 +453,7 @@ const AudioEngine = (() => {
 
   function startAmbient() {
     if (!audioCtx || windNode) return;
+    if (typeof GAME_CONFIG !== 'undefined' && GAME_CONFIG.muteAmbient) return;
     windNode = audioCtx.createBufferSource();
     windNode.buffer = buffers.wind;
     windNode.loop = true;
