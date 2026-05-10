@@ -109,6 +109,10 @@
             <span class="info-icon">⏱️</span>
             <span class="info-value" id="survival-time">0:00</span>
           </div>
+          <div class="info-item" id="refugee-hud">
+            <span class="info-icon">🏠</span>
+            <span class="info-value" id="refugee-distance">---</span>
+          </div>
         </div>
       </div>
     </div>
@@ -153,6 +157,48 @@
       <button class="btn-primary" onclick="restartGame()">
         <span class="btn-icon">🔄</span>
         <span>TRY AGAIN</span>
+      </button>
+      <button class="btn-secondary" onclick="goHome()">
+        <span>MAIN MENU</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ VICTORY SCREEN ============ -->
+  <div id="victory-screen" class="screen">
+    <div class="victory-content">
+      <div class="victory-glow"></div>
+      <h1 class="victory-title">ESCAPED</h1>
+      <div class="victory-icon">🏠</div>
+      <div class="victory-stats">
+        <div class="vs-stat">
+          <span class="vs-label">Time Survived</span>
+          <span class="vs-value" id="vs-time">0:00</span>
+        </div>
+        <div class="vs-stat">
+          <span class="vs-label">Distance Walked</span>
+          <span class="vs-value" id="vs-distance">0m</span>
+        </div>
+        <div class="vs-stat">
+          <span class="vs-label">Zombies Evaded</span>
+          <span class="vs-value" id="vs-evaded">0</span>
+        </div>
+        <div class="vs-stat">
+          <span class="vs-label">Perks Collected</span>
+          <span class="vs-value" id="vs-perks">0</span>
+        </div>
+        <div class="vs-stat">
+          <span class="vs-label">Escape Bonus</span>
+          <span class="vs-value bonus" id="vs-bonus">+0</span>
+        </div>
+        <div class="vs-stat final-score">
+          <span class="vs-label">FINAL SCORE</span>
+          <span class="vs-value" id="vs-score">0</span>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="restartGame()">
+        <span class="btn-icon">🔄</span>
+        <span>RUN AGAIN</span>
       </button>
       <button class="btn-secondary" onclick="goHome()">
         <span>MAIN MENU</span>

@@ -52,6 +52,20 @@
 
 ---
 
+## Milestone 1.5 — Platform Abstraction Layer (HAL) 🔲
+> *Prepare the codebase for native ports (iOS/Android) by decoupling platform APIs from core game logic.*
+
+**Problem:** The current codebase mixes game logic with browser-specific APIs (`navigator.geolocation`, Web Audio, `localStorage`, `vibrate`). To port this to a native mobile app framework later, we need to extract these.
+
+**Concept:** Implement a Hardware Abstraction Layer (HAL). The core engine will use generic interfaces (e.g., `IGeoProvider`, `IAudioProvider`), while browser-specific logic will be moved into wrappers (e.g., `WebGeoProvider`). 
+
+### Tasks
+- 🔲 Define standard interfaces for Geo, Audio, Haptics, and Storage.
+- 🔲 Create "Web Implementation" wrappers for current browser APIs.
+- 🔲 Refactor `game-engine.js` and `audio-engine.js` to rely exclusively on these abstract providers rather than directly calling `window` or `navigator`.
+
+---
+
 ## Milestone 2 — Safety-First, Audio-First Design 🔲
 > *A player walking in the real world must NOT need to stare at their screen. The display is a complement; sound is the primary interface.*
 
