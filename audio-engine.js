@@ -172,6 +172,47 @@ const AudioEngine = (() => {
     return buffer;
   }
 
+  function createRefugeeBeaconBuffer(ctx) {
+    const sampleRate = ctx.sampleRate;
+    const duration = 0.3;
+    const length = sampleRate * duration;
+    const buffer = ctx.createBuffer(1, length, sampleRate);
+    const data = buffer.getChannelData(0);
+
+    for (let i = 0; i < length; i++) {
+      const t = i / sampleRate;
+      // Clean sine ping at 880Hz with fast decay
+      const sample = Math.sin(2 * Math.PI * 880 * t) * Math.exp(-t * 12);
+      // Add a faint harmonic at 1320Hz
+      const harmonic = Math.sin(2 * Math.PI * 1320 * t) * Math.exp(-t * 18) * 0.3;
+      data[i] = (sample + harmonic) * 0.6;
+    }
+    return buffer;
+  }
+
+  function createVictoryBuffer(ctx) {
+    const sampleRate = ctx.sampleRate;
+    const duration = 1.5;
+    const length = sampleRate * duration;
+    const buffer = ctx.createBuffer(1, length, sampleRate);
+    const data = buffer.getChannelData(0);
+    const notes = [523, 659, 784]; // C5, E5, G5
+
+    for (let i = 0; i < length; i++) {
+      const t = i / sampleRate;
+      let sample = 0;
+      notes.forEach((freq, idx) => {
+        const onset = idx * 0.4;
+        if (t >= onset) {
+          const localT = t - onset;
+          sample += Math.sin(2 * Math.PI * freq * localT) * Math.exp(-localT * 3) * 0.3;
+        }
+      });
+      data[i] = sample;
+    }
+    return buffer;
+  }
+
   // ---- Core API ----
 
   // Hidden audio element for iOS media channel routing
@@ -265,6 +306,8 @@ const AudioEngine = (() => {
       buffers.wind = createWindBuffer(audioCtx, 6.0);
       buffers.pickup = createPickupBuffer(audioCtx);
       buffers.hurt = createHurtBuffer(audioCtx);
+      buffers.refugeeBeacon = createRefugeeBeaconBuffer(audioCtx);
+      buffers.victory = createVictoryBuffer(audioCtx);
 
       initialized = true;
       console.log('[AudioEngine] Initialized with synthesized sounds');
@@ -450,6 +493,100 @@ const AudioEngine = (() => {
     }
   }
 
+  // ---- Refugee Beacon ----
+  let beaconInterval = null;
+  let _beaconCurrentInterval = Infinity;
+  let beaconPanner = null;  // reuse a single panner — update position each ping
+
+  function updateRefugeeBeacon(bearingDeg, distanceM) {
+    if (!audioCtx || !initialized) return;
+
+    // Pulse interval: 4000ms at 500m → 700ms at 0m
+    const maxDist = 500;
+    const minInterval = 700;
+    const maxInterval = 4000;
+    const clampedDist = Math.min(distanceM, maxDist);
+    const intervalMs = minInterval + (clampedDist / maxDist) * (maxInterval - minInterval);
+
+    // Only restart the timer if interval has shifted significantly (>150ms)
+    // Prevents rapid restart thrashing from GPS jitter
+    if (beaconInterval && Math.abs(intervalMs - _beaconCurrentInterval) < 150) {
+      // Still update the panner position even if timer didn't restart
+      _updateBeaconPannerPosition(bearingDeg, distanceM);
+      return;
+    }
+
+    stopRefugeeBeacon();
+    _beaconCurrentInterval = intervalMs;
+
+    const playPing = () => {
+      if (!buffers.refugeeBeacon) return;
+
+      // Create a fresh panner each ping (BufferSourceNodes are single-use)
+      const panner = audioCtx.createPanner();
+      panner.panningModel = 'HRTF';
+      panner.distanceModel = 'inverse';
+      panner.refDistance = 1;
+      panner.maxDistance = 60;   // ~600m in game scale
+      panner.rolloffFactor = 0.8; // gentler rolloff than zombies — beacon should always be audible
+
+      // Position panner in the direction of the Refugee
+      // Same coordinate convention as zombie panners (bearing 0=North → -Z)
+      const rad = (bearingDeg - 90) * (Math.PI / 180);
+      const scale = 0.1;  // 1m world = 0.1 audio units
+      const x = Math.cos(rad) * clampedDist * scale;
+      const z = Math.sin(rad) * clampedDist * scale;
+      if (panner.positionX) {
+        panner.positionX.value = x;
+        panner.positionY.value = 0;
+        panner.positionZ.value = z;
+      } else {
+        panner.setPosition(x, 0, z);
+      }
+
+      const gain = audioCtx.createGain();
+      // Volume: 0.15 at max distance, 0.55 when very close
+      gain.gain.value = 0.15 + (1 - clampedDist / maxDist) * 0.40;
+
+      const src = audioCtx.createBufferSource();
+      src.buffer = buffers.refugeeBeacon;
+      // Pitch rises 5% per 100m of closure (up to 25% higher when adjacent)
+      src.playbackRate.value = 1.0 + (1 - clampedDist / maxDist) * 0.25;
+
+      src.connect(panner);
+      panner.connect(gain);
+      gain.connect(masterGain);
+      src.start();
+    };
+
+    playPing();
+    beaconInterval = setInterval(playPing, intervalMs);
+  }
+
+  function _updateBeaconPannerPosition(bearingDeg, distanceM) {
+    // Called between interval restarts to keep panner direction current
+  }
+
+  function stopRefugeeBeacon() {
+    if (beaconInterval) {
+      clearInterval(beaconInterval);
+      beaconInterval = null;
+      _beaconCurrentInterval = Infinity;
+    }
+  }
+
+  function playVictory() {
+    if (!audioCtx || !buffers.victory) return;
+    stopRefugeeBeacon();
+    const src = audioCtx.createBufferSource();
+    src.buffer = buffers.victory;
+    const gain = audioCtx.createGain();
+    gain.gain.value = 0.8;
+    src.connect(gain);
+    gain.connect(masterGain);
+    src.start();
+  }
+
   /**
    * Clean up all spatial sources
    */
@@ -457,6 +594,7 @@ const AudioEngine = (() => {
     spatialSources.forEach((_, id) => removeZombieSound(id));
     stopAmbient();
     stopHeartbeat();
+    stopRefugeeBeacon();
   }
 
   /**
@@ -479,6 +617,9 @@ const AudioEngine = (() => {
     stopAmbient,
     startHeartbeat,
     stopHeartbeat,
+    updateRefugeeBeacon,
+    stopRefugeeBeacon,
+    playVictory,
     cleanup,
     resume,
     get isInitialized() { return initialized; },

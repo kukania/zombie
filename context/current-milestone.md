@@ -5,8 +5,8 @@
 - [x] **Step 1:** Update `game-engine.js` to add Refugee constants, state, init spawn, update check.
 - [x] **Step 2:** Update `index.html` with `#victory-screen` HTML and refugee HUD element. Bump cache-bust version.
 - [x] **Step 3:** Update `style.css` for Refugee marker, final-push overlay, and victory screen styles.
-- [ ] **Step 4:** Update `audio-engine.js` to add beacon buffer, victory buffer, `updateRefugeeBeacon(bearingDeg, distanceM)`, and `playVictory()`.
-- [ ] **Step 5:** Update `app.js` for Refugee marker creation, `gameLoop` wiring, `onPlayerVictory()`, and event handlers.
+- [x] **Step 4:** Update `audio-engine.js` to add beacon buffer, victory buffer, `updateRefugeeBeacon(bearingDeg, distanceM)`, and `playVictory()`.
+- [x] **Step 5:** Update `app.js` for Refugee marker creation, `gameLoop` wiring, `onPlayerVictory()`, and event handlers.
 
 ## Design Decisions (Resolved)
 

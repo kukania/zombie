@@ -8,6 +8,7 @@ let map = null;
 let fogCanvas = null;
 let fogCtx = null;
 let playerMarker = null;
+let refugeeMarker = null;
 let zombieMarkers = new Map();  // zombieId -> L.marker
 let perkMarkers = new Map();    // perkId -> L.marker
 let gameLoopTimer = null;
@@ -294,6 +295,20 @@ function onFirstGPSFix(lat, lon) {
   // Initialize game engine
   GameEngine.init(lat, lon);
 
+  // Create refugee marker (always visible, not fog-gated)
+  const state = GameEngine.getState();
+  if (state.refugee) {
+    refugeeMarker = L.marker([state.refugee.lat, state.refugee.lon], {
+      icon: L.divIcon({
+        className: 'marker-refugee',
+        html: '🏠',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      }),
+      zIndexOffset: 900,
+    }).addTo(map);
+  }
+
   // Start ambient audio
   AudioEngine.startAmbient();
 
@@ -318,6 +333,22 @@ function gameLoop() {
   if (!result) return;
 
   const { state, events, visibilityRadius, audioRadius, isLowHealth, revealAll } = result;
+
+  // --- Update refugee ---
+  if (result.refugee && !result.refugee.reached) {
+    const d = Math.round(result.distToRefugee);
+    document.getElementById('refugee-distance').textContent =
+      d >= 1000 ? (d / 1000).toFixed(1) + 'km' : d + 'm';
+
+    // Calculate bearing to refugee
+    const refugeeBearing = GeoUtils.bearing(
+      currentLat, currentLon, 
+      result.refugee.lat, result.refugee.lon
+    );
+
+    // Update spatial audio beacon
+    AudioEngine.updateRefugeeBeacon(refugeeBearing, result.distToRefugee);
+  }
 
   // --- Update map position ---
   map.setView([currentLat, currentLon], map.getZoom(), { animate: true, duration: 0.5 });
@@ -459,6 +490,16 @@ function handleEvent(event) {
     case 'item_used':
       AudioEngine.playUI('pickup', 0.4);
       showItemUsedFeedback(event.detail);
+      break;
+
+    case 'final_push':
+      document.getElementById('game-screen').classList.add('final-push-active');
+      showItemUsedFeedback('⚠️ They sense the refuge...');
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      break;
+
+    case 'refugee_reached':
+      onPlayerVictory(event.bonus);
       break;
   }
 }
@@ -620,6 +661,48 @@ function onPlayerDeath() {
   }, 800);
 }
 
+function onPlayerVictory(escapeBonus) {
+  clearInterval(gameLoopTimer);
+  AudioEngine.playVictory();
+  AudioEngine.cleanup();  // stops beacon, heartbeat, ambient
+
+  if (navigator.vibrate) navigator.vibrate([100, 80, 100, 80, 400]);
+
+  const state = GameEngine.getState();
+
+  // Populate victory screen
+  const elapsed = Math.floor(state.elapsedS);
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  document.getElementById('vs-time').textContent =
+    `${mins}:${secs.toString().padStart(2, '0')}`;
+
+  const distM = Math.floor(state.player.distanceWalkedM);
+  document.getElementById('vs-distance').textContent =
+    distM >= 1000 ? (distM / 1000).toFixed(1) + 'km' : distM + 'm';
+
+  document.getElementById('vs-evaded').textContent = state.zombiesEvaded;
+  document.getElementById('vs-perks').textContent = state.perksCollected;
+  document.getElementById('vs-bonus').textContent = '+' + escapeBonus.toLocaleString();
+  document.getElementById('vs-score').textContent = state.player.score.toLocaleString();
+
+  // Persist escape stats
+  const escapes = parseInt(localStorage.getItem('zw_escapes') || '0') + 1;
+  localStorage.setItem('zw_escapes', escapes.toString());
+  const bestEscape = parseInt(localStorage.getItem('zw_best_escape_time') || '9999999');
+  if (elapsed < bestEscape) {
+    localStorage.setItem('zw_best_escape_time', elapsed.toString());
+  }
+
+  // Also check overall high score
+  const highScore = parseInt(localStorage.getItem('zw_highscore') || '0');
+  if (state.player.score > highScore) {
+    localStorage.setItem('zw_highscore', state.player.score.toString());
+  }
+
+  setTimeout(() => showScreen('victory-screen'), 600);
+}
+
 // ---- Start / Restart ----
 function startGame() {
   try {
@@ -663,6 +746,9 @@ function restartGame() {
   zombieMarkers.clear();
   perkMarkers.forEach((m) => map.removeLayer(m));
   perkMarkers.clear();
+
+  if (refugeeMarker) { map.removeLayer(refugeeMarker); refugeeMarker = null; }
+  document.getElementById('game-screen').classList.remove('final-push-active');
 
   showScreen('game-screen');
 
