@@ -5,42 +5,7 @@
 
 const GameEngine = (() => {
   // ---- Configuration ----
-  const CONFIG = {
-    // Visibility
-    visibilityRadiusM: 80,       // meters — player can see this far
-    audioRadiusM: 200,           // meters — player can hear zombies this far
-
-    // Zombies
-    maxZombies: 12,
-    spawnMinDistM: 60,           // don't spawn too close
-    spawnMaxDistM: 200,          // don't spawn too far
-    zombieDetectRangeM: 45,      // zombie starts chasing player within this
-    zombieDamageRangeM: 8,       // zombie deals damage within this
-    zombieDamageCooldownS: 2.5,  // seconds between damage hits
-    zombieDamage: 15,            // HP per hit
-    spawnIntervalS: 8,           // new zombie every N seconds
-
-    // Zombie speeds (meters per second — realistic walking speeds)
-    walkerSpeed: 0.8,
-    runnerSpeed: 2.5,
-    screamerSpeed: 0.5,
-
-    // Perks
-    maxPerks: 5,
-    perkSpawnMinDistM: 30,
-    perkSpawnMaxDistM: 120,
-    perkLifetimeS: 300,          // despawn after 5 min
-    perkPickupRangeM: 12,        // meters to collect
-
-    // Player
-    maxHealth: 100,
-    scorePerMeter: 1,
-    scorePerPerkCollected: 50,
-    scorePerSecondSurvived: 2,
-
-    // Difficulty ramp
-    difficultyIntervalS: 60,    // increase difficulty every 60s
-  };
+  let CONFIG = { ...GAME_CONFIG };
 
   // ---- State ----
   let state = null;
@@ -79,6 +44,10 @@ const GameEngine = (() => {
       difficultyLevel: 1,
       // Active effects
       activeEffects: [],         // { type, expiresAt }
+      // Refugee
+      refugee: null,             // { lat, lon, reached: false }
+      finalPushActive: false,
+      escapeBonus: 0,
     };
   }
 
@@ -113,6 +82,7 @@ const GameEngine = (() => {
   // ---- Core methods ----
 
   function init(lat, lon) {
+    CONFIG = { ...GAME_CONFIG }; // reset config for new run
     state = createInitialState();
     state.player.lat = lat;
     state.player.lon = lon;
@@ -130,7 +100,13 @@ const GameEngine = (() => {
       spawnPerk();
     }
 
+    // Spawn refugee
+    const refugeeBearing = Math.random() * 360;
+    const refugeePos = GeoUtils.pointAtDistanceBearing(lat, lon, CONFIG.refugeeDistanceM, refugeeBearing);
+    state.refugee = { lat: refugeePos.lat, lon: refugeePos.lon, reached: false };
+    
     console.log('[GameEngine] Initialized at', lat.toFixed(5), lon.toFixed(5));
+    console.log('[GameEngine] Refugee at', refugeePos.lat.toFixed(5), refugeePos.lon.toFixed(5));
   }
 
   function spawnZombie() {
@@ -194,6 +170,40 @@ const GameEngine = (() => {
     const now = Date.now() / 1000;
     state.elapsedS = now - state.startTime;
 
+    const events = [];
+    let distToRefugeeValue = Infinity;
+
+    // --- Check refugee proximity ---
+    if (state.refugee && !state.refugee.reached) {
+      distToRefugeeValue = GeoUtils.distance(
+        state.player.lat, state.player.lon,
+        state.refugee.lat, state.refugee.lon
+      );
+
+      // Victory condition
+      if (distToRefugeeValue < CONFIG.refugeePickupRangeM) {
+        state.refugee.reached = true;
+        state.running = false;
+
+        // Calculate escape bonus
+        const healthBonus = Math.floor(state.player.health * CONFIG.scoreEscapeHealthMult);
+        const timeUnderPar = Math.max(0, CONFIG.scoreEscapeParTimeS - state.elapsedS);
+        const timeBonus = Math.floor(timeUnderPar * CONFIG.scoreEscapeTimeMult);
+        const escapeBonus = CONFIG.scoreEscapeBase + healthBonus + timeBonus;
+        state.player.score += escapeBonus;
+        state.escapeBonus = escapeBonus;
+
+        events.push({ type: 'refugee_reached', bonus: escapeBonus });
+      }
+
+      // Final push: entering 200m radius escalates difficulty
+      if (!state.finalPushActive && distToRefugeeValue < CONFIG.refugeeFinalPushM) {
+        state.finalPushActive = true;
+        CONFIG.spawnIntervalS = Math.max(2, CONFIG.spawnIntervalS / 2);
+        events.push({ type: 'final_push' });
+      }
+    }
+
     // --- Update player position ---
     const moved = GeoUtils.distance(state.player.lastLat, state.player.lastLon, playerLat, playerLon);
     if (moved > 1) { // ignore GPS jitter under 1m
@@ -230,8 +240,6 @@ const GameEngine = (() => {
     }
 
     // --- Update zombie AI ---
-    const events = [];
-
     state.zombies.forEach((zombie) => {
       const distToPlayer = GeoUtils.distance(
         zombie.lat, zombie.lon,
@@ -352,6 +360,8 @@ const GameEngine = (() => {
       revealAll: state.activeEffects.some(
         (e) => e.type === 'reveal' && e.expiresAt > now
       ),
+      refugee: state.refugee,
+      distToRefugee: distToRefugeeValue,
     };
   }
 
