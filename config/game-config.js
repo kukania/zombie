@@ -48,6 +48,6 @@ const GAME_CONFIG = {
   scoreEscapeParTimeS: 300,    // par time in seconds (faster = bigger bonus)
 
   // Testing & Debug
-  enableSimMode: true,        // Forces game into desktop simulation mode (ignores real GPS)
+  enableSimMode: false,        // Forces game into desktop simulation mode (ignores real GPS)
   muteAmbient: true,          // Mutes the wind/background drone for easier audio testing
 };
